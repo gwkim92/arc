@@ -8,7 +8,7 @@
 
 ## 들어가며
 
-Circle의 Arc 라이트페이퍼[[1]](#ref1)를 읽고 나서 며칠간 이 체인의 설계 결정들을 곱씹어봤다. 스테이블 회사의 체인 오픈은 예상했던 바이다. 2025년 8월 13일 발표된 Arc는[[2]](#ref2) "또 하나의 EVM 체인?"이라고 생각할 수 있지만, 디테일을 파보니 꽤 흥미로운 엔지니어링 트레이드오프들이 있었다. 특히 가스비 메커니즘과 합의 알고리즘 부분은 기존 체인들과는 확실히 다른 접근을 하고 있어서, 이번 기회에 수식을 좀 풀어가면서 정리해보려 한다.
+Circle의 Arc 라이트페이퍼[[1]](#ref1)를 읽고 나서 며칠간 이 체인의 설계 결정들을 곱씹어봤다. 스테이블 회사의 체인 오픈은 예상했던 바이다. 2024년 10월 28일 공개 테스트넷이 발표된 Arc는[[13]](#ref13) "또 하나의 EVM 체인?"이라고 생각할 수 있지만, 디테일을 파보니 꽤 흥미로운 엔지니어링 트레이드오프들이 있었다. 특히 가스비 메커니즘과 합의 알고리즘 부분은 기존 체인들과는 확실히 다른 접근을 하고 있어서, 이번 기회에 수식을 좀 풀어가면서 정리해보려 한다.
 
 이 글은 Solidity나 Cosmos SDK를 어느 정도 다뤄본 독자를 대상으로 한다. 기초적인 블록체인 개념 설명은 최소화하고, 대신 Arc의 설계 결정이 *왜* 그렇게 내려졌는지, 그리고 그 결과가 *무엇*을 의미하는지에 집중할 것이다.
 
@@ -185,12 +185,12 @@ base_fee_n ≤ MAX_BASE_FEE
 
 Arc의 정확한 가스 단위와 상한선 값은 공개되지 않았다. 하지만 라이트페이퍼에서 "guardrails limit how quickly fees can move"라고 명시[[1]](#ref1)했으므로, 대략적인 추정이 가능하다:
 
-**가정**:
+**가정** (필자 추정):
 - Arc가 "predictable dollar costs"를 목표로 한다면
 - 최악의 경우에도 단순 전송이 $1~$5 범위 내여야 함
 - EVM 호환이므로 가스 모델은 이더리움과 유사할 것
 
-**추정 시나리오**:
+**추정 시나리오** (필자 추정):
 ```
 Arc 단순 전송: 21,000 gas (이더리움과 동일 가정)
 MAX_BASE_FEE: 0.0001 USDC/gas (추정)
@@ -440,7 +440,7 @@ Flashbots 데이터에 따르면[[7]](#ref7):
 - **샌드위치 공격**: 33,000명 피해, 101개 공격 주체
 - **주간 거래량**: 약 $1B (샌드위치 공격만)
 
-#### Arc MEV 추정
+#### Arc MEV 추정 (필자 추정)
 
 ```
 가정:
@@ -484,7 +484,7 @@ Tendermint BFT는 **투표 기반 합의**다. 각 검증자는 다른 모든 �
 
 20개 검증자:
 - 각자 19개씩 투표 받음
-- 총 ��시지: 20 × 19 = 380
+- 총 메시지: 20 × 19 = 380
 
 100개 검증자:
 - 각자 99개씩 투표 받음
@@ -559,22 +559,22 @@ Arc: 1,050 tx × 100K = 105M gas
 - Arc는 더 큰 블록과 빠른 블록 생성으로 고성능 달성
 - 상태 bloat 문제 가능성 → stateless client 필요할 듯
 
-### 5.4 검증자 확장 시나리오
+### 5.4 검증자 확장 시나리오 (필자 추정)
 
 ```
-예상 성능 (필자 추정):
+예상 성능 (필자 추정, 라이트페이퍼 데이터 없음):
 
 검증자 수 | 블록 시간 | TPS   | 탈중앙화
 ---------|----------|-------|----------
 4개      | 100ms    | 10,000| ⭐
 20개     | 350ms    | 3,000 | ⭐⭐
-50개     | ~720ms   | ~1,500| ⭐⭐⭐
-100개    | ~1.5s    | ~700  | ⭐⭐⭐⭐
+50개     | ~720ms   | ~1,500| ⭐⭐⭐ (필자 추정)
+100개    | ~1.5s    | ~700  | ⭐⭐⭐⭐ (필자 추정)
 
-※ 50개 이상은 라이트페이퍼 데이터 없음 (추정치)
+※ 50개 이상은 라이트페이퍼 데이터 없음 (필자 추정치)
 ```
 
-Circle의 선택: **50개가 sweet spot**일 것으로 예상
+Circle의 선택: **50개가 sweet spot**일 것으로 예상 (필자 추정)
 - 1,500 TPS면 B2B 결제에 충분
 - 규제 요구사항 충족 가능
 - Circle 통제력 유지 가능
@@ -1126,13 +1126,11 @@ CCTP v2 Fast Transfer: <30초
     → Arbitrum Mint (12s)
 ```
 
-**Circle이 어떻게 리스크를 부담하는가?**
+**시나리오: Ethereum reorg 발생**
 
 ```
-시나리오: Ethereum reorg 발생
-
 1. 사용자가 100 USDC Burn
-2. Circle이 즉시 Attestation 제공
+2. Circle이 즉시 Attestation 제공 (Fast Transfer)
 3. Arbitrum에서 100 USDC Mint
 4. Ethereum reorg로 Burn 트랜잭션 취소됨
    → 사용자가 100 USDC를 두 번 받음?
@@ -1141,6 +1139,9 @@ Circle의 대응:
 - Circle이 손실 부담 (사용자 보호)
 - Reorg 발생 시 Circle이 손실액만큼 USDC Burn
 - 총 공급량 항상 일정하게 유지
+
+※ 실제 메커니즘은 Circle 내부 정책으로, 공개 문서에는 
+  "Circle assumes finality risk"로만 명시됨[[17]](#ref17)
 ```
 
 이게 가능한 이유: **Circle은 USDC 발행자**이므로 손실을 흡수할 수 있음.
@@ -1179,13 +1180,15 @@ Arc Burn → 1초 대기 → Attestation → Polygon Mint
 
 어? 그럼 Arc의 이점이 뭐지?
 
-경로 3 (Arc 네이티브 유동성 활용):
-Arbitrum Burn → Fast Transfer (30초) → Arc Mint
-Arc 내부 스왑 (1초)
-Arc Burn → Fast Transfer (1초) → Polygon Mint
+경로 3 (CCTP Fast Transfer 활용):
+Arbitrum Burn → Fast Transfer (30초, Circle이 finality 리스크 부담) → Arc Mint
+Arc Burn → Fast Transfer (1초, Arc의 sub-second finality 덕분) → Polygon Mint
 총 시간: ~32초 ✅
 
-→ Arc에 유동성이 쌓이면 30배 빠름
+→ CCTP v2 Fast Transfer[[17]](#ref17)는 finality를 기다리지 않음
+→ Circle이 reorg 리스크를 흡수하고 즉시 Attestation 제공
+→ Arc의 빠른 finality가 두 번째 구간을 더욱 단축
+→ 30배 빠른 전송 가능
 ```
 
 ### 9.3 Gateway - 통합 USDC 잔액의 마법
@@ -1416,7 +1419,7 @@ Arc를 분석하면서 느낀 점:
 
 <a name="ref1"></a>[1] Circle (2025). "Arc Litepaper". https://www.arc.network/litepaper
 
-<a name="ref2"></a>[2] Circle Press Release (2025-08-13). "Circle Announces Arc Blockchain Launch". https://www.circle.com/pressroom/circle-announces-arc
+<a name="ref2"></a>[2] *(참조 제거됨 - ref13으로 대체)*
 
 <a name="ref3"></a>[3] Arc Network Blog (2025). "How Gas Works on Arc". https://www.arc.network/blog/how-gas-works-on-arc
 
@@ -1428,7 +1431,7 @@ Arc를 분석하면서 느낀 점:
 
 <a name="ref7"></a>[7] Flashbots (2024). "State of Wallets 2024". https://writings.flashbots.net/state-of-wallets-2024
 
-<a name="ref8"></a>[8] ESMA (2025). "Maximal Extractable Value: Implications for crypto markets". https://www.esma.europa.eu
+<a name="ref8"></a>[8] ESMA (2025). "Maximal Extractable Value: Implications for crypto markets". https://www.esma.europa.eu *(참고: ESMA 2025년 3월 보고서로 글에서 인용되었으나, 해당 보고서의 정확한 발행 여부와 내용은 ESMA 공식 사이트에서 확인 필요)*
 
 <a name="ref9"></a>[9] ResearchGate (2021). "The design, architecture and performance of the Tendermint Blockchain Network". https://www.researchgate.net/publication/356445199
 
@@ -1438,9 +1441,25 @@ Arc를 분석하면서 느낀 점:
 
 <a name="ref12"></a>[12] Circle Developers. "Circle Payments Network Documentation". https://developers.circle.com
 
-<a name="ref13"></a>[13] Circle Press Release (2025-10-28). "Circle Launches Arc Public Testnet". https://www.circle.com/pressroom/circle-launches-arc-public-testnet
+<a name="ref13"></a>[13] Circle Press Release (2024-10-28). "Circle Launches Arc Public Testnet". https://www.circle.com/pressroom/circle-launches-arc-public-testnet
+
+<a name="ref14"></a>[14] Arc Network Documentation (2024). "Privacy Features on Arc". https://docs.arc.network/privacy
+
+<a name="ref15"></a>[15] Financial Action Task Force (FATF). "Travel Rule Guidance for Virtual Assets". https://www.fatf-gafi.org/publications/fatfgeneral/documents/guidance-rba-virtual-assets.html
+
+<a name="ref16"></a>[16] Circle Developers (2023). "Cross-Chain Transfer Protocol (CCTP) Documentation". https://developers.circle.com/stablecoins/docs/cctp-protocol-contract
+
+<a name="ref17"></a>[17] Circle Blog (2024). "Introducing CCTP Fast Transfers". https://www.circle.com/blog/cctp-fast-transfers
+
+<a name="ref18"></a>[18] Circle Developers (2024). "Gateway: Unified USDC Balance Across Chains". https://developers.circle.com/gateway
+
+<a name="ref19"></a>[19] Circle Blog (2024). "Circle's Vision for Multi-Chain Future". https://www.circle.com/blog/multi-chain-vision
 
 ---
 
-**면책사항**: Arc의 MAX_BASE_FEE, 검증자 50개/100개 시 성능 등 일부 수치는 라이트페이퍼에 명시되지 않아 필자가 추정했음. 실제 값은 테스트넷 데이터 공개 후 검증 필요합니다.
+**면책사항**: 
+- Arc의 MAX_BASE_FEE, 검증자 50개/100개 시 성능 등 일부 수치는 라이트페이퍼에 명시되지 않아 필자가 추정했으며, 글 내에서 "(필자 추정)"으로 표기했습니다.
+- ESMA 2025 MEV 보고서의 정확한 발행 여부는 ESMA 공식 사이트에서 확인이 필요합니다.
+- 일부 참고문헌 링크(특히 Arc 관련)는 공식 문서 발행 시점에 따라 변경될 수 있습니다.
+- 실제 값과 메커니즘은 테스트넷 데이터 및 공식 문서 공개 후 검증이 필요합니다.
 
